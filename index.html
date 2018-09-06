@@ -24,8 +24,134 @@
 	<body>
 		<div class="reveal">
 			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+				<section data-markdown>
+          <textarea data-template>
+            # Redux
+            ## The Promise Land
+          </textarea>
+        </section>
+				<section data-markdown>
+          <textarea data-template>
+            ### Состояние приложения
+            - метки в разметчике
+            - метки в сайдбаре
+            - группы в другом сайдбаре
+            - связь меток и групп
+          </textarea>
+        </section>
+				<section id="fragment">
+          <h3>Добавление новой метки</h3>
+          <ul>
+            <li class="fragment">Отправить на сервер</span>
+            <li class="fragment">Добавить в разметку</span>
+            <li class="fragment">Добавить в сайдбар</span>
+          </ul>
+          <p class="fragment">выглядит просто</p>
+
+        </section>
+        <section id="fragment">
+          <h3>Присвоение группы метке</h3>
+          <ul>
+            <li class="fragment">выделить группу</li>
+            <li class="fragment">выбрать метку</li>
+            <li class="fragment">присвоить метке группу</li>
+            <li class="fragment">нарисовать группу рядом с меткой</li>
+          </ul>
+          <p class="fragment">Где все это будет? Marker?</p>
+        </section>
+				<section data-markdown>
+          <textarea data-template>
+            ### Собственно почему бы и нет
+            - чтобы изменить работу с группами, нужно изменить практически все
+            - код больше похож на базар, когда в одной функции меняется все подряд
+            - сложно рефачить, потому что нельзя просто взять и выкинуть
+            функцию - она может сломать логику во всех местах
+          </textarea>
+        </section>
+
+        <section>
+        <h3>Чем поможет Redux</h3>
+        <ul>
+          <li>SPR - он отвечает только за данные. Все</li>
+          <li>Single source of Truth - Только одно хранилище, только одно
+            место, где создаются и изменяются данные. Легко найти, сложно накосячить</li>
+          <li>Просто(вся библиотека - 600 строк)</li>
+          <li>Уведомления по изменениям</li>
+          <li>Связка с React, автообновление, оптимизации</li>
+          <li>велосипедирование - написать свой redux</li>
+          <li>Штуки типа undo/redo - интегрируются просто при необъодимости</li>
+        </ul>
+        </section>
+        <section>
+          <h3>Состояние на странице</h3>
+          <pre>
+            <code class="hljs">
+              const initialState = {
+                marks: [],
+                groups: [],
+                selectedGroup: -1
+              }
+            </code>
+          </pre>
+        <ul>
+          <li>По структуре понятно что у нас есть на странице</li>
+          <li>связи - через - id</li>
+        </ul>
+        </section>
+        <section>
+          <h3>Изменение состояния: действия(action)</h3>
+          <pre><code class="hljs">
+          function setGroup(markId, groupId) {
+            return {
+              type: 'set_group',
+              payload: {mark: markId, group: groupId}
+            }
+          }
+          </code></pre>
+          <p>Описывает что нужно сделать</p>
+        </section>
+        <section>
+          <h3>Изменение состояния: редьюсеры(reducers)</h3>
+          <pre><code class="hljs">
+          function marksReducer(state=[], action) {
+            switch (action.type) {
+            case 'ADD_MARK':
+              return [...state, action.payload]
+            case 'SET_GROUP':
+              const mid = action.payload.mark
+              const gid = action.payload.group
+              let newState = [...state]
+              let mark = newState.find((m) => m.id === mid)
+              if (!mark.groups.includes(gid))
+                mark.groups.push(gid)
+              return newState
+            default:
+              return state
+            }
+          }
+          </code></pre>
+          <p>Описывают как меняется состояние при этом событии</p>
+        </section>
+        <section>
+          <h3>Фичи: middleware</h3>
+          <p>Покажем-ка alert, когда запросы обрываются.
+          Все действия с провалом запроса - должны иметь тип <code>*_FAILED</code>
+          </p>
+          <pre><code class="hljs">
+          function messageErrorMiddleware({ getState }) {
+            // return func, that return func. WTF? Yeah.
+            return (next) => (action) => {
+              if (action.type.includes('FAILED'))
+                messageError(action.payload.message,
+                             action.payload.header)
+            }
+          }
+          window.store =
+            createStore(rootReducer,
+                        initial,
+                        applyMiddleware(messageErrorMiddleware))
+          </code></pre>
+        </section>
 			</div>
 		</div>
 
